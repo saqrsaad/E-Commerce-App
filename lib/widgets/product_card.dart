@@ -14,40 +14,57 @@ class ProductCard extends StatelessWidget {
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
-        padding: const EdgeInsets.all(8.0),
+        padding: const EdgeInsets.all(8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Product image
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              //child: Image.network(product.imageUrl, height: 100, fit: BoxFit.cover),
-             child: Image.asset(product.imageUrl, width: 70, height: 70, fit: BoxFit.cover),
+            // صورة المنتج مرنة باستخدام Expanded + AspectRatio
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: AspectRatio(
+                  aspectRatio: 1, // نسبة مربعة، ممكن تغييرها حسب الحاجة
+                  child: Image.asset(product.imageUrl, fit: BoxFit.cover)
+                ),
+              ),
             ),
             const SizedBox(height: 8),
-            // Name and price
-            Text(product.name, style: const TextStyle(fontWeight: FontWeight.w600)),
-            Text('\$${product.price.toStringAsFixed(2)})', style: const TextStyle(color: Colors.deepPurple)),
-            const Spacer(),
+            // اسم المنتج
+            Text(
+              product.name,
+              style: const TextStyle(fontWeight: FontWeight.w600),
+            ),
+            // السعر
+            Text(
+              '\$${product.price.toStringAsFixed(2)}',
+              style: const TextStyle(color: Colors.deepPurple),
+            ),
+            const Spacer(), // يدفع الأزرار للأسفل
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Wrapping only the heart icon with Consumer<FavoritesProvider>
+                // قلب المفضلة
                 Consumer<FavoritesProvider>(
                   builder: (context, favProvider, _) => IconButton(
                     icon: Icon(
-                      favProvider.isFavorite(product) ? Icons.favorite : Icons.favorite_border,
+                      favProvider.isFavorite(product)
+                          ? Icons.favorite
+                          : Icons.favorite_border,
                       color: favProvider.isFavorite(product) ? Colors.red : null,
                     ),
                     onPressed: () => favProvider.toggleFavorite(product),
                   ),
                 ),
-                // Add to cart button – uses listen: false to avoid rebuilding
+                // زر الإضافة إلى السلّة
                 ElevatedButton.icon(
-                  onPressed: () => Provider.of<CartProvider>(context, listen: false).addToCart(product),
+                  onPressed: () =>
+                      Provider.of<CartProvider>(context, listen: false).addToCart(product),
                   icon: const Icon(Icons.add_shopping_cart, size: 18),
                   label: const Text('Add'),
-                  style: ElevatedButton.styleFrom(foregroundColor: Colors.white, backgroundColor: Colors.deepPurple),
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    backgroundColor: Colors.deepPurple,
+                  ),
                 ),
               ],
             ),

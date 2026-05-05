@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-//import 'package:provider/provider.dart';
 import '../models/cart_item.dart';
 import '../providers/cart_provider.dart';
 
@@ -17,8 +16,7 @@ class CartItemTile extends StatelessWidget {
     return ListTile(
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        //child: Image.network(product.imageUrl, width: 50, height: 50, fit: BoxFit.cover),
-        child: Image.asset(product.imageUrl, width: 70, height: 70, fit: BoxFit.cover),
+       child:SizedBox(width: 70, height: 70, child: Image.asset(product.imageUrl, fit: BoxFit.cover)),
       ),
       title: Text(product.name),
       subtitle: Text('\$${product.price.toStringAsFixed(2)} each'),

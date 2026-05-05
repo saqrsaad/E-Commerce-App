@@ -124,6 +124,30 @@ flutter run -d <device>
 ```
 
 ---
+---
+
+# 🌐 Web Deployment
+
+## Netlify
+
+```bash
+flutter build web
+```
+
+Then:
+
+- Log in to Netlify
+- Drag & drop the `build/web` folder
+- Your site will deploy instantly
+
+## Firebase Hosting
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase init hosting
+firebase deploy --only hosting
+```
 
 
 # 🧰 Built With

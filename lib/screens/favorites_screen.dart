@@ -31,7 +31,7 @@ class FavoritesScreen extends StatelessWidget {
               return ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(product.imageUrl, width: 50, height: 50, fit: BoxFit.cover),
+                  child: Image.asset(product.imageUrl, width: 60, height: 60, fit: BoxFit.cover),
                 ),
                 title: Text(product.name),
                 subtitle: Text('\$${product.price.toStringAsFixed(2)}'),

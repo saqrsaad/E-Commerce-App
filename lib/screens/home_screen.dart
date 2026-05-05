@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-//import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/product_card.dart';
@@ -21,10 +20,7 @@ class HomeScreen extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.shopping_cart),
                   onPressed: () {
-                    // Switch to cart tab via BottomNavigationBar (handled in main.dart)
-                    // We can't directly switch, so we just emit no action; the parent controls navigation.
-                    // Alternatively we could call DefaultTabController? Not needed. We'll just go to cart screen via the bottom bar.
-                  },
+                                 },
                 ),
                 if (cart.itemCount > 0)
                   Positioned(
@@ -82,7 +78,7 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.all(8),
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 2,
-                  childAspectRatio: 0.7,
+                  childAspectRatio: 0.8,
                   crossAxisSpacing: 8,
                   mainAxisSpacing: 8,
                 ),
