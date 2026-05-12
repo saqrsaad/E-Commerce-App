@@ -1,34 +1,77 @@
 import 'package:flutter/foundation.dart';
 import '../models/product.dart';
+import '../services/product_service.dart';
+import '../helpers/local_storage.dart';
+
+enum LoadingState { idle, loading, error, success }
 
 class ProductProvider extends ChangeNotifier {
-  // Hardcoded fake products with placeholder images.
-  final List<Product> _allProducts = [
-    const Product(id: '1', name: 'Wireless Headphones', imageUrl: 'assets/images/headphones.png', price: 79.99, category: 'Electronics'),
-    const Product(id: '2', name: 'Smart Watch', imageUrl: 'assets/images/computer.png', price: 199.99, category: 'Electronics'),
-    const Product(id: '3', name: 'Leather Jacket', imageUrl: 'assets/images/leather_jacket.png', price: 149.99, category: 'Fashion'),
-    const Product(id: '4', name: 'Running Shoes', imageUrl: 'assets/images/running_shoes.png', price: 89.99, category: 'Fashion'),
-    const Product(id: '5', name: 'Basketball', imageUrl: 'assets/images/basketball.png', price: 29.99, category: 'Sports'),
-    const Product(id: '6', name: 'Yoga Mat', imageUrl: 'assets/images/yoga_mat.png', price: 39.99, category: 'Sports'),
-    const Product(id: '7', name: 'Eau de Parfum', imageUrl: 'assets/images/parfum.png', price: 59.99, category: 'Perfumes'),
-    const Product(id: '8', name: 'Scented Candle Set', imageUrl: 'assets/images/candle_set.png', price: 34.99, category: 'Perfumes'),
-  ];
+  final ProductService _productService = ProductService();
 
+  List<Product> _allProducts = [];
+  List<String> _categories = [];
   String _selectedCategory = 'All';
+  LoadingState _state = LoadingState.idle;
+  String _errorMessage = '';
 
-  // Returns the filtered list based on the active category.
+  List<Product> get allProducts => _allProducts;
+  List<String> get categories => _categories;
+  String get selectedCategory => _selectedCategory;
+  LoadingState get state => _state;
+  String get errorMessage => _errorMessage;
+
+  // المنتجات بعد التصفية
   List<Product> get filteredProducts {
     if (_selectedCategory == 'All') return _allProducts;
     return _allProducts.where((p) => p.category == _selectedCategory).toList();
   }
 
-  String get selectedCategory => _selectedCategory;
-
-  // Categories for the filter chips.
-  final List<String> categories = ['All', 'Electronics', 'Fashion', 'Sports', 'Perfumes'];
-
   void setCategory(String category) {
     _selectedCategory = category;
     notifyListeners();
+  }
+
+  // تحميل المنتجات مع دعم العمل دون اتصال
+  Future<void> loadProducts() async {
+    _state = LoadingState.loading;
+    notifyListeners();
+
+    try {
+      // محاولة تحميل البيانات من الإنترنت
+      final products = await _productService.fetchProducts();
+      _allProducts = products;
+      // حفظ نسخة محلية للعمل offline
+      await LocalStorage.cacheProducts(products);
+      _state = LoadingState.success;
+    } catch (e) {
+      // في حالة الفشل (لا يوجد إنترنت) نعتمد على النسخة المخزنة
+      final cached = await LocalStorage.getCachedProducts();
+      if (cached != null && cached.isNotEmpty) {
+        _allProducts = cached;
+        _state = LoadingState.success;
+      } else {
+        _state = LoadingState.error;
+        _errorMessage = _translateError(e);
+      }
+    }
+    notifyListeners();
+  }
+
+  // تحميل الأقسام (دائماً نحتاج الإنترنت لها، لكن نسمح بالفشل)
+  Future<void> loadCategories() async {
+    try {
+      _categories = await _productService.fetchCategories();
+    } catch (_) {
+      // إذا فشل جلب الأقسام، نستخرجها من المنتجات المحملة
+      _categories = ['All', ...allProducts.map((p) => p.category).toSet()];
+    }
+    notifyListeners();
+  }
+
+  // تحويل الخطأ إلى رسالة عربية
+  String _translateError(dynamic e) {
+    if (e.toString().contains('لا يوجد اتصال')) return 'لا يوجد اتصال بالإنترنت';
+    if (e.toString().contains('انتهت مهلة')) return 'انتهت مهلة الاتصال';
+    return 'حدث خطأ أثناء تحميل البيانات';
   }
 }

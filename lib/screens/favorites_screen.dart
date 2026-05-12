@@ -8,7 +8,7 @@ class FavoritesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Favorites')),
+      appBar: AppBar(title: const Text('المفضلة')),
       body: Consumer<FavoritesProvider>(
         builder: (context, favProvider, _) {
           if (favProvider.favorites.isEmpty) {
@@ -18,7 +18,7 @@ class FavoritesScreen extends StatelessWidget {
                 children: [
                   Icon(Icons.favorite_border, size: 64, color: Colors.grey),
                   SizedBox(height: 16),
-                  Text('No favorites yet', style: TextStyle(fontSize: 18, color: Colors.grey)),
+                  Text('لا توجد مفضلات بعد', style: TextStyle(fontSize: 18, color: Colors.grey)),
                 ],
               ),
             );
@@ -31,9 +31,10 @@ class FavoritesScreen extends StatelessWidget {
               return ListTile(
                 leading: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.asset(product.imageUrl, width: 60, height: 60, fit: BoxFit.cover),
+                  child: Image.network(product.image,
+                      width: 50, height: 50, fit: BoxFit.cover),
                 ),
-                title: Text(product.name),
+                title: Text(product.title, maxLines: 1),
                 subtitle: Text('\$${product.price.toStringAsFixed(2)}'),
                 trailing: IconButton(
                   icon: const Icon(Icons.favorite, color: Colors.red),

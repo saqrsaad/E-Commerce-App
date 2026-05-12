@@ -3,24 +3,40 @@ import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
 import '../providers/cart_provider.dart';
 import '../widgets/product_card.dart';
+import '../widgets/error_widget.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // بدء تحميل البيانات عند دخول الشاشة لأول مرة
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final productProvider = context.read<ProductProvider>();
+      if (productProvider.state == LoadingState.idle) {
+        productProvider.loadProducts().then((_) => productProvider.loadCategories());
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Store saqr'),
+        title: const Text('المتجر'),
         actions: [
-          // Cart icon with badge using Consumer<CartProvider>
           Consumer<CartProvider>(
             builder: (context, cart, _) => Stack(
               children: [
                 IconButton(
                   icon: const Icon(Icons.shopping_cart),
-                  onPressed: () {
-                                 },
+                  onPressed: () {},
                 ),
                 if (cart.itemCount > 0)
                   Positioned(
@@ -30,12 +46,14 @@ class HomeScreen extends StatelessWidget {
                       padding: const EdgeInsets.all(2),
                       decoration: const BoxDecoration(
                         color: Colors.red,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
+                        shape: BoxShape.circle,
                       ),
-                      constraints: const BoxConstraints(minWidth: 18, minHeight: 18),
+                      constraints:
+                          const BoxConstraints(minWidth: 18, minHeight: 18),
                       child: Text(
                         '${cart.itemCount}',
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(
+                            color: Colors.white, fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -45,51 +63,61 @@ class HomeScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          // Horizontal category filter
-          Consumer<ProductProvider>(
-            builder: (context, productProvider, _) => SizedBox(
-              height: 60,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                itemCount: productProvider.categories.length,
-                itemBuilder: (context, index) {
-                  final category = productProvider.categories[index];
-                  final isSelected = productProvider.selectedCategory == category;
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ChoiceChip(
-                      label: Text(category),
-                      selected: isSelected,
-                      selectedColor: Colors.deepPurple.shade100,
-                      onSelected: (_) => productProvider.setCategory(category),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-          // Product grid – filtered by category
-          Expanded(
-            child: Consumer<ProductProvider>(
-              builder: (context, productProvider, _) => GridView.builder(
-                padding: const EdgeInsets.all(8),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 0.8,
-                  crossAxisSpacing: 8,
-                  mainAxisSpacing: 8,
-                ),
-                itemCount: productProvider.filteredProducts.length,
-                itemBuilder: (context, index) => ProductCard(
-                  product: productProvider.filteredProducts[index],
+      body: Consumer<ProductProvider>(
+        builder: (context, provider, _) {
+          if (provider.state == LoadingState.loading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (provider.state == LoadingState.error) {
+            return AppErrorWidget(
+              message: provider.errorMessage,
+              onRetry: () => provider.loadProducts().then((_) => provider.loadCategories()),
+            );
+          }
+          // نجاح
+          return Column(
+            children: [
+              // شرائط التصنيف
+              SizedBox(
+                height: 60,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  itemCount: provider.categories.length,
+                  itemBuilder: (context, index) {
+                    final category = provider.categories[index];
+                    final isSelected = provider.selectedCategory == category;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: ChoiceChip(
+                        label: Text(category),
+                        selected: isSelected,
+                        selectedColor: Colors.deepPurple.shade100,
+                        onSelected: (_) => provider.setCategory(category),
+                      ),
+                    );
+                  },
                 ),
               ),
-            ),
-          ),
-        ],
+              // شبكة المنتجات
+              Expanded(
+                child: GridView.builder(
+                  padding: const EdgeInsets.all(8),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.8,
+                    crossAxisSpacing: 8,
+                    mainAxisSpacing: 8,
+                  ),
+                  itemCount: provider.filteredProducts.length,
+                  itemBuilder: (context, index) => ProductCard(
+                    product: provider.filteredProducts[index],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

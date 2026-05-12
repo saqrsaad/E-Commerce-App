@@ -1,14 +1,12 @@
-import 'package:e_commerce_app/providers/cart_provider.dart';
-import 'package:e_commerce_app/providers/favorites_provider.dart';
-import 'package:e_commerce_app/providers/product_provider.dart';
-import 'package:e_commerce_app/screens/cart_screen.dart';
-import 'package:e_commerce_app/screens/favorites_screen.dart';
-import 'package:e_commerce_app/screens/home_screen.dart';
-import 'package:e_commerce_app/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
-
+import 'providers/product_provider.dart';
+import 'providers/favorites_provider.dart';
+import 'providers/cart_provider.dart';
+import 'screens/home_screen.dart';
+import 'screens/favorites_screen.dart';
+import 'screens/cart_screen.dart';
+import 'theme/app_theme.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,7 +24,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MaterialApp(
-        title: 'E‑Commerce',
+        title: 'المتجر الذكي',
         theme: AppTheme.lightTheme,
         debugShowCheckedModeBanner: false,
         home: const MainScreen(),
@@ -54,17 +52,14 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: _screens,
-      ),
+      body: IndexedStack(index: _currentIndex, children: _screens),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
         items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'Favorites'),
-          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
+          BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'المفضلة'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'السلة'),
         ],
       ),
     );
