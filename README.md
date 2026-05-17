@@ -1,179 +1,319 @@
-```markdown
-# 🛍️ Flutter E-Commerce App (API + Offline)
+# 🛍️ E-Commerce App (Flutter + Provider + API + Offline Support)
 
-A full-featured multi‑screen shopping app built with **Flutter**, **Provider**, and **real API data**.  
-It demonstrates clean architecture, state management, offline caching, and advanced error handling.
+A multi-screen e-commerce application built with **Flutter** using **Provider** for state management, featuring real integration with an external API and full offline support.
+
+This project demonstrates professional best practices for separating UI from business logic, handling errors cleanly, and optimizing performance using different Provider techniques such as `Consumer`, `Selector`, and `listen: false`.
 
 ---
 
-# ✨ Features
+# 🧱 Architecture
 
-- **Live API Data** – Products, categories, and cart fetched from [FakeStore API](https://fakestoreapi.com)
-- **Offline Support** – First successful load caches products locally; app works without internet using cached data
-- **Category Filter** – Horizontal category chips (loaded from API)
-- **Favorites** – Heart icon toggles favorites, persisted with `SharedPreferences`
-- **Shopping Cart** – Add/remove items, quantity controls, subtotal/tax/total calculation (local state with silent API sync)
-- **Error Handling** – Try/catch, timeout (10s), status‑code translation to Arabic user‑friendly messages
-- **Loading & Empty States** – CircularProgressIndicator while fetching, retry button on error, empty cart/favorites messages
-- **Product Detail Screen** – Tap a product to see full description and image
-- **Cart Badge** – Real‑time item count on cart icon
-- **Performance Optimized** – `Consumer`, `Selector`, `listen: false`, `const` constructors
-- **Custom Theme** – Gradient app bar, Poppins font, clean colours
+The application follows a simplified **MVVM architecture** using `ChangeNotifier` as ViewModels and `Provider` for connecting state to the widget tree.
+
+```text
+[UI Layer]  ←→  [Providers (ChangeNotifier)]  ←→  [Services (API/Local Storage)]
+     ↑                      ↑
+  (Widgets)         (State + Business Logic)
+```
+
+* **UI Layer:** Screens and widgets listening to state changes using `Consumer` and `Selector`.
+* **Providers Layer:** Manages application state (products, favorites, cart) and business logic.
+* **Services Layer:** Wraps HTTP communication (`BaseApiService`, `ProductService`, `CartService`) and local storage access (`LocalStorage`).
+
+---
+
+# 🔄 Key Changes Between the Initial and Current Version
+
+| Area                | Initial Version              | Current Advanced Version                                 |
+| ------------------- | ---------------------------- | -------------------------------------------------------- |
+| **Data Source**     | Static mock data inside code | Real **FakeStore API** integration                       |
+| **Storage**         | None                         | Local caching using **SharedPreferences**                |
+| **Offline Support** | Not supported                | Loads cached data when offline                           |
+| **Error Handling**  | No handling                  | Custom `ApiException`, translated errors, full try/catch |
+| **Loading States**  | Direct rendering             | `LoadingState` with loading indicators and retry button  |
+| **Favorites**       | Temporary in memory          | Persisted permanently using `SharedPreferences`          |
+| **Cart**            | Local only                   | Local updates + silent API synchronization               |
+| **Network Errors**  | Not handled                  | Timeout detection and `SocketException` handling         |
+| **Permissions**     | Missing                      | Internet permissions for Android and macOS               |
+| **Extra Features**  | None                         | Product details screen and cart badge counter            |
 
 ---
 
 # 📁 Project Structure
 
-```plaintext
-ecommerce_app/
-├── lib/
-│   ├── main.dart                          # App entry, MultiProvider, bottom navigation
-│   ├── models/
-│   │   ├── product.dart                   # Product model + JSON serialization
-│   │   ├── cart_item_model.dart           # Cart item for local logic
-│   │   └── cart_model.dart                # Cart & CartItemApi for API responses
-│   ├── services/
-│   │   ├── base_api_service.dart          # Generic HTTP service, timeout, error handling
-│   │   ├── product_service.dart           # fetchProducts(), fetchCategories()
-│   │   ├── cart_service.dart              # fetchCart(), addToCart(), removeFromCart()
-│   │   └── api_exception.dart             # Custom exception with status code & message
-│   ├── helpers/
-│   │   └── local_storage.dart             # Cache/restore products using SharedPreferences
-│   ├── providers/
-│   │   ├── product_provider.dart          # Product list, category filtering, loading states
-│   │   ├── favorites_provider.dart        # Favorites set, persisted locally
-│   │   └── cart_provider.dart             # Cart management, calculations, sync attempts
-│   ├── screens/
-│   │   ├── home_screen.dart               # Product grid with loading/error states
-│   │   ├── favorites_screen.dart          # List of favourite products
-│   │   ├── cart_screen.dart               # Cart with quantity controls & summary
-│   │   └── product_detail_screen.dart     # (Bonus) Full product details
-│   ├── widgets/
-│   │   ├── product_card.dart              # Product card (image, name, price, heart, add to cart)
-│   │   ├── cart_item_tile.dart            # Cart item row with +/– and delete
-│   │   └── error_widget.dart              # Reusable error display with retry button
-│   └── theme/
-│       └── app_theme.dart                 # Gradient, font and colour definitions
-├── pubspec.yaml
-└── README.md
+```text
+lib/
+├── main.dart                           # Entry point, MultiProvider setup, bottom navigation
+├── models/
+│   ├── product.dart                    # Product model with fromJson/toJson
+│   ├── cart_item_model.dart            # Local cart item model (Product + quantity)
+│   └── cart_model.dart                 # API cart model (id, userId, date, products[])
+├── services/
+│   ├── base_api_service.dart           # Generic HTTP client (GET/POST/PUT/DELETE)
+│   ├── product_service.dart            # fetchProducts() / fetchCategories()
+│   ├── cart_service.dart               # fetchCart() / addToCart() / removeFromCart()
+│   └── api_exception.dart              # Custom exception with statusCode and readable messages
+├── helpers/
+│   └── local_storage.dart              # Save/load product cache using SharedPreferences
+├── providers/
+│   ├── product_provider.dart           # Product loading, filtering, loading state
+│   ├── favorites_provider.dart         # Favorites with automatic local persistence
+│   └── cart_provider.dart              # Cart operations and API synchronization
+├── screens/
+│   ├── home_screen.dart                # Main screen with loading/error states
+│   ├── favorites_screen.dart           # Favorites screen
+│   ├── cart_screen.dart                # Cart screen with financial summary and Selector optimization
+│   └── product_detail_screen.dart      # Full product details screen
+├── widgets/
+│   ├── product_card.dart               # Reusable product card
+│   ├── cart_item_tile.dart             # Cart item row with quantity controls
+│   └── error_widget.dart               # Reusable error widget with retry button
+└── theme/
+    └── app_theme.dart                  # Color palette, Poppins font, theme settings
 ```
 
 ---
 
-# 📝 Commentary on Key Files
+# ⚙️ How It Works
 
-## `base_api_service.dart`
-Centralized HTTP client. Adds default headers (`Content-Type`, `Accept`), enforces a 10‑second timeout, and translates common network / status errors into Arabic messages (`ApiException`).
+## 1. API Communication (`BaseApiService`)
 
-## `product_service.dart`
-Inherits `BaseApiService` and fetches product list from `GET /products` and categories from `GET /products/categories`. Data is parsed using `Product.fromJson`.
+* The `baseUrl` (`https://fakestoreapi.com`) is defined once centrally.
+* All requests pass through `_handleRequest`, which applies a 10-second timeout.
+* HTTP headers are configured automatically:
 
-## `product_provider.dart`
-Manages loading state (`idle` → `loading` → `success` / `error`). On failure, falls back to cached products via `LocalStorage`, enabling offline browsing.
+  * `Content-Type: application/json; charset=UTF-8`
+  * `Accept: application/json`
+* Common HTTP errors (`400`, `404`, `500`, etc.) are converted into user-friendly messages.
+* `SocketException` and `TimeoutException` are transformed into readable API exceptions such as:
 
-## `local_storage.dart`
-Stores the last successful product list as JSON in `SharedPreferences`. On next launch, if internet is unavailable, the cached data is displayed instantly.
+  * `"No Internet Connection"`
+  * `"Connection Timed Out"`
 
-## `favorites_provider.dart`
-Favourites are kept locally as a `Set<Product>` and serialised to `SharedPreferences` after each change, so they persist across app restarts.
+---
 
-## `cart_screen.dart`
-Uses `Selector<CartProvider, double>` to rebuild only the total section when the total changes, keeping the UI snappy.
+## 2. Product Loading (`ProductProvider`)
+
+```text
+initState() → loadProducts() → [Loading] → API call → Success → cacheLocal
+                                     ↘ Failure → load from cache
+```
+
+* On startup, the provider enters the loading state and displays a loading indicator.
+* On success, products are cached locally using `SharedPreferences`.
+* On failure, cached data is loaded if available; otherwise, an error widget with a retry button is displayed.
+
+---
+
+## 3. Local Storage (`LocalStorage`)
+
+* Product lists are converted to JSON using `toJson()` and stored in `SharedPreferences`.
+* Restoration is done by decoding JSON and rebuilding objects using `Product.fromJson()`.
+* Local caching is used only for products; favorites have separate persistence logic.
+
+---
+
+## 4. Persistent Favorites (`FavoritesProvider`)
+
+* Favorites are saved immediately after each `toggleFavorite()` operation.
+* The favorites list is restored automatically during provider initialization.
+* Favorites work entirely offline.
+
+---
+
+## 5. Shopping Cart (`CartProvider`)
+
+* Add/remove/update operations happen locally first for instant UI updates.
+* Background synchronization with the API is attempted silently using `CartService`.
+* Cart calculations (`subtotal`, `tax`, `total`) are computed dynamically.
+* The UI listens selectively using `Selector` to reduce unnecessary rebuilds.
+
+---
+
+## 6. Performance Optimization
+
+* `Consumer` is scoped to the smallest possible widgets (e.g., favorite icon, cart summary).
+* `Selector` is used to monitor only the `total` value inside the cart screen.
+* `Provider.of<T>(context, listen: false)` is used inside callbacks to avoid rebuilds.
+* `const` constructors are applied wherever possible.
 
 ---
 
 # 🚀 Getting Started
 
-## Prerequisites
+## Requirements
 
-- Flutter SDK ≥ 3.0
-- Android Studio / VS Code
-- A device/emulator or Chrome for web
-
-## Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/saqrsaad/E-Commerce-App.git
-   cd ecommerce-app
-   ```
-
-2. **Install dependencies**
-   ```bash
-   flutter pub get
-   ```
-
-3. **Run the app**
-   ```bash
-   flutter run -d chrome          # Web
-   flutter run -d <device_id>     # Mobile/Desktop
-   ```
-
-> **Note:** Internet permission is already enabled in `AndroidManifest.xml` and `macOS` entitlements.
+* Flutter SDK ≥ 3.0
+* VS Code or Android Studio
+* Browser, emulator, or physical device
 
 ---
 
-# 📸 Screenshots
+## Installation & Run
 
-<p align="center">
-  <img src="screenshots/1.png" width="200"/>  <!-- Home with loading -->
-  <img src="screenshots/2.png" width="200"/>  <!-- Product grid -->
-  <img src="screenshots/3.png" width="200"/>  <!-- Favourites empty -->
-  <img src="screenshots/4.png" width="200"/>  <!-- Favourites filled -->
-  <img src="screenshots/5.png" width="200"/>  <!-- Cart with items -->
-  <img src="screenshots/6.png" width="200"/>  <!-- Product detail -->
-  <img src="screenshots/7.png" width="200"/>  <!-- Error state -->
-  <img src="screenshots/8.png" width="200"/>  <!-- Offline mode -->
-</p>
+```bash
+# Clone repository
+git clone https://github.com/saqrsaad/E-Commerce-App.git
+
+# Open project
+cd ecommerce-app
+
+# Install dependencies
+flutter pub get
+
+# Run on Chrome
+flutter run -d chrome
+
+# Or run on a connected device
+flutter run
+```
+
+---
+
+## Internet Permissions
+
+### Android
+
+Ensure the following permission exists inside:
+
+```text
+android/app/src/main/AndroidManifest.xml
+```
+
+```xml
+<uses-permission android:name="android.permission.INTERNET"/>
+```
+
+### macOS
+
+Ensure the following entitlement is enabled:
+
+```text
+macos/Runner/*.entitlements
+```
+
+```xml
+com.apple.security.network.client = true
+```
 
 ---
 
 # 🌐 Web Deployment
 
 ## Netlify
+
 ```bash
 flutter build web
 ```
-Then:
-- Log in to [Netlify](https://netlify.com)
-- Drag & drop the `build/web` folder
-- Your site will deploy instantly
+
+Upload the `build/web` folder to:
+
+[Netlify](https://netlify.com)
+
+---
 
 ## Firebase Hosting
+
 ```bash
 npm install -g firebase-tools
+
 firebase login
+
 firebase init hosting
-# Set public directory to build/web
+# Select:
+# public directory = build/web
+
 firebase deploy --only hosting
+```
+
+Official website:
+
+[Firebase Hosting](https://firebase.google.com)
+
+---
+
+# 🧪 Testing Scenarios
+
+### Offline Mode
+
+When the app starts without internet:
+
+* Cached products are displayed if available.
+* Otherwise, a `"No Internet Connection"` message appears.
+
+### Connection Timeout
+
+Reducing the timeout duration to 2 seconds inside `BaseApiService` triggers:
+
+* `"Connection Timed Out"`
+
+### Missing Product
+
+Calling:
+
+```http
+GET /products/9999
+```
+
+Returns:
+
+* `"Data Not Found"`
+
+### Cart Operations
+
+* Cart badge updates instantly.
+* Products appear immediately after adding.
+
+### Favorites Persistence
+
+* Favorites remain saved after restarting the app.
+
+---
+
+# 📸 Screenshots
+
+```html
+<p align="center">
+  <img src="screenshots/1.png" width="200"/>
+  <img src="screenshots/2.png" width="200"/>
+  <img src="screenshots/3.png" width="200"/>
+  <img src="screenshots/4.png" width="200"/>
+  <img src="screenshots/5.png" width="200"/>
+  <img src="screenshots/6.png" width="200"/>
+  <img src="screenshots/7.png" width="200"/>
+  <img src="screenshots/8.png" width="200"/>
+</p>
 ```
 
 ---
 
-# 🧪 Testing
+# 🧰 Technologies Used
 
-| Scenario | Expected Result |
-|----------|-----------------|
-| **Airplane mode** | App loads cached products & shows “لا يوجد اتصال” if no cache |
-| **Reduce timeout to 2s** | Error message “انتهت مهلة الاتصال” |
-| **Request invalid product ID** | “البيانات غير موجودة” (404) |
-| **Add to cart** | Item appears, badge updates, silent API sync |
-| **Remove from cart** | Item disappears immediately |
+* **Flutter** (Stable Channel)
+* **Provider** ^6.1.2
+* **http** ^1.2.0
+* **shared_preferences** ^2.2.2
+* **google_fonts** ^6.2.1
+* **FakeStore API**
 
----
+Official API website:
 
-# 🧰 Built With
-
-- [Flutter](https://flutter.dev)
-- [Provider](https://pub.dev/packages/provider)
-- [http](https://pub.dev/packages/http)
-- [shared_preferences](https://pub.dev/packages/shared_preferences)
-- [google_fonts](https://pub.dev/packages/google_fonts)
-- [FakeStore API](https://fakestoreapi.com)
+[FakeStore API](https://fakestoreapi.com)
 
 ---
 
 # 📄 License
 
-This project is open-source and available under the MIT License.
-```
+MIT License — Free to use, modify, and distribute with attribution.
+
+---
+
+# ✍️ Developer Notes
+
+* This project started as an academic assignment and was later expanded with real API integration and offline support.
+* It demonstrates how to migrate from mock data to real backend data without breaking application architecture.
+* The project can easily switch from FakeStore API to any other backend by updating:
+
+  * `baseUrl`
+  * `fromJson()`
+  * `toJson()` models
