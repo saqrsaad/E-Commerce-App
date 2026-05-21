@@ -33,12 +33,25 @@ migrate_working_dir/
 /build/
 /coverage/
 
+docs/
+
+
+firebase.json
+firestore.rules
+firestore.indexes.json
 # Symbolication related
 app.*.symbols
 
 # Obfuscation related
 app.*.map.json
+# Ignore text files
+*.txt
 
+# Ignore markdown files
+*.md
+
+# Allow README only
+!README.md
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
