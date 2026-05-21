@@ -29,7 +29,7 @@ class ProductCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                   child: AspectRatio(
                     aspectRatio: 1,
-                    child: Image.network(product.image, fit: BoxFit.cover),
+                    child: Image.network(product.imageUrl, fit: BoxFit.cover),
                   ),
                 ),
               ),

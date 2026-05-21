@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/product_provider.dart';
@@ -13,6 +15,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+   final TextEditingController _searchController = TextEditingController();
+  Timer? _debounce;
+
   @override
   void initState() {
     super.initState();
@@ -20,9 +25,24 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final productProvider = context.read<ProductProvider>();
       if (productProvider.state == LoadingState.idle) {
-        productProvider.loadProducts().then((_) => productProvider.loadCategories());
+        productProvider.loadProducts();
+        //.then((_) => productProvider.loadCategories());
       }
     });
+  }
+
+  void _onSearchChanged(String value) {
+    if (_debounce?.isActive ?? false) _debounce!.cancel();
+    _debounce = Timer(const Duration(milliseconds: 300), () {
+      context.read<ProductProvider>().setSearchQuery(value);
+    });
+  }
+
+@override
+  void dispose() {
+    _searchController.dispose();
+    _debounce?.cancel();
+    super.dispose();
   }
 
   @override
@@ -63,45 +83,127 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Consumer<ProductProvider>(
-        builder: (context, provider, _) {
-          if (provider.state == LoadingState.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (provider.state == LoadingState.error) {
-            return AppErrorWidget(
-              message: provider.errorMessage,
-              onRetry: () => provider.loadProducts().then((_) => provider.loadCategories()),
-            );
-          }
-          // نجاح
-          return Column(
-            children: [
-              // شرائط التصنيف
-              SizedBox(
-                height: 60,
+     
+      // body: Consumer<ProductProvider>(
+      //   builder: (context, provider, _) {
+      //     if (provider.state == LoadingState.loading) {
+      //       return const Center(child: CircularProgressIndicator());
+      //     }
+      //     if (provider.state == LoadingState.error) {
+      //       return AppErrorWidget(
+      //         message: provider.errorMessage,
+      //         onRetry: () => provider.loadProducts().then((_) => provider.loadCategories()),
+      //       );
+      //     }
+      //     // نجاح
+      //     return Column(
+      //       children: [
+      //         // شرائط التصنيف
+      //         SizedBox(
+      //           height: 60,
+      //           child: ListView.builder(
+      //             scrollDirection: Axis.horizontal,
+      //             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      //             itemCount: provider.categories.length,
+      //             itemBuilder: (context, index) {
+      //               final category = provider.categories[index];
+      //               final isSelected = provider.selectedCategory == category;
+      //               return Padding(
+      //                 padding: const EdgeInsets.symmetric(horizontal: 4),
+      //                 child: ChoiceChip(
+      //                   label: Text(category),
+      //                   selected: isSelected,
+      //                   selectedColor: Colors.deepPurple.shade100,
+      //                   onSelected: (_) => provider.setCategory(category),
+      //                 ),
+      //               );
+      //             },
+      //           ),
+      //         ),
+      //         // شبكة المنتجات
+      //         Expanded(
+      //           child: GridView.builder(
+      //             padding: const EdgeInsets.all(8),
+      //             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      //               crossAxisCount: 2,
+      //               childAspectRatio: 0.8,
+      //               crossAxisSpacing: 8,
+      //               mainAxisSpacing: 8,
+      //             ),
+      //             itemCount: provider.filteredProducts.length,
+      //             itemBuilder: (context, index) => ProductCard(
+      //               product: provider.filteredProducts[index],
+      //             ),
+      //           ),
+      //         ),
+      //       ],
+      //     );
+      //   },
+      // ),
+      body: Column(
+        children: [
+          // شريط البحث
+          Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: TextField(
+              controller: _searchController,
+              onChanged: _onSearchChanged,
+              decoration: InputDecoration(
+                hintText: 'ابحث عن منتج...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16),
+              ),
+            ),
+          ),
+          // شرائط الفئات
+          Consumer<ProductProvider>(
+            builder: (context, provider, _) {
+              return SizedBox(
+                height: 50,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
                   itemCount: provider.categories.length,
                   itemBuilder: (context, index) {
-                    final category = provider.categories[index];
-                    final isSelected = provider.selectedCategory == category;
+                    final cat = provider.categories[index];
+                    final isSelected = provider.selectedCategory == cat;
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4),
                       child: ChoiceChip(
-                        label: Text(category),
+                        label: Text(cat),
                         selected: isSelected,
                         selectedColor: Colors.deepPurple.shade100,
-                        onSelected: (_) => provider.setCategory(category),
+                        onSelected: (_) => provider.setCategory(cat),
                       ),
                     );
                   },
                 ),
-              ),
-              // شبكة المنتجات
-              Expanded(
-                child: GridView.builder(
+              );
+            },
+          ),
+          Expanded(
+            child: Consumer<ProductProvider>(
+              builder: (context, provider, _) {
+                if (provider.state == LoadingState.loading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (provider.state == LoadingState.error) {
+                  return AppErrorWidget(
+                    message: provider.errorMessage,
+                    onRetry: () => provider.retry(),
+                  );
+                }
+                final products = provider.filteredProducts;
+                if (products.isEmpty) {
+                  return const Center(
+                    child: Text('لم يتم العثور على منتجات',
+                        style: TextStyle(fontSize: 18, color: Colors.grey)),
+                  );
+                }
+                return GridView.builder(
                   padding: const EdgeInsets.all(8),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
@@ -109,15 +211,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 8,
                   ),
-                  itemCount: provider.filteredProducts.length,
-                  itemBuilder: (context, index) => ProductCard(
-                    product: provider.filteredProducts[index],
-                  ),
-                ),
-              ),
-            ],
-          );
-        },
+                  itemCount: products.length,
+                  itemBuilder: (context, index) =>
+                      ProductCard(product: products[index]),
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -13,7 +13,7 @@ class CartItemTile extends StatelessWidget {
     return ListTile(
       leading: ClipRRect(
         borderRadius: BorderRadius.circular(8),
-        child: Image.network(product.image, width: 60, height: 60, fit: BoxFit.cover),
+        child: Image.network(product.imageUrl, width: 60, height: 60, fit: BoxFit.cover),
       ),
       title: Text(product.title, maxLines: 1),
       subtitle: Text('\$${product.price.toStringAsFixed(2)} لكل وحدة'),

@@ -5,7 +5,6 @@ import '../services/cart_service.dart';
 
 class CartProvider extends ChangeNotifier {
   final CartService _cartService = CartService();
-  // نستخدم cartId ثابت للبساطة (يمكن تعديله لاحقاً مع تسجيل الدخول)
   final int _cartId = 1;
 
   final List<CartItemModel> _cartItems = [];
@@ -28,16 +27,12 @@ class CartProvider extends ChangeNotifier {
 
     try {
       final cart = await _cartService.fetchCart(_cartId);
-      // تحويل CartItemApi إلى CartItemModel (نحتاج Product كامل - هنا سنقوم بتحميل المنتجات من مزود المنتجات)
-      // لكننا سنحتفظ بالسلة المحلية فقط في هذا التطبيق (لأن FakeStore لا يرجع تفاصيل المنتج)
-      // لذلك نكتفي بالسلة المحلية دون الاعتماد كثيراً على API للسلة.
-      // لكن يمكننا توضيح التكامل: نترك هذه الدالة لتوضيح المبدأ.
-      // سأبقي السلة محلية بالكامل مع خيار المزامنة لاحقاً.
-      _isLoading = false;
+    
+          _isLoading = false;
     } catch (e) {
       // نستخدم السلة المحلية فقط
       _isLoading = false;
-      _errorMessage = null; // لا نعرض خطأ، نعتمد على النسخة المحلية
+      _errorMessage = null; 
     }
     notifyListeners();
   }
@@ -56,7 +51,7 @@ class CartProvider extends ChangeNotifier {
 
   Future<void> _syncAddToCart(Product product) async {
     try {
-      await _cartService.addToCart(_cartId, product.id, 1);
+      await _cartService.addToCart(_cartId, product.id as int, 1);
     } catch (_) {
       // تجاهل أخطاء المزامنة، السلة المحلية هي الأساس
     }
@@ -70,7 +65,7 @@ class CartProvider extends ChangeNotifier {
 
   Future<void> _syncRemoveFromCart(Product product) async {
     try {
-      await _cartService.removeFromCart(_cartId, product.id);
+      await _cartService.removeFromCart(_cartId, product.id as int);
     } catch (_) {}
   }
 
