@@ -33,7 +33,7 @@ class ProductCard extends StatelessWidget {
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
                   child: Container(
-                     color: Colors.grey.shade100,
+                    color: Colors.grey.shade100,
                     // aspectRatio: 1,
                     child: Image.network(product.imageUrl, fit: BoxFit.contain),
                   ),
@@ -62,22 +62,22 @@ class ProductCard extends StatelessWidget {
                           isFav ? Icons.favorite : Icons.favorite_border,
                           color: isFav ? Colors.red : null,
                         ),
-                         onPressed: () async {
-        // Check if user is logged in
-        if (!favProvider.isUserLoggedIn) {
-          // Show login dialog
-          final loggedIn = await showDialog<bool>(
-            context: context,
-            builder: (_) => const LoginDialog(),
-          );
-          // If user logged in successfully, toggle favorite
-          if (loggedIn == true && context.mounted) {
-            favProvider.toggleFavorite(product);
-          }
-        } else {
-          favProvider.toggleFavorite(product);
-        }
-      },
+                        onPressed: () async {
+                          // Check if user is logged in
+                          if (!favProvider.isUserLoggedIn) {
+                            // Show login dialog
+                            final loggedIn = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => const LoginDialog(),
+                            );
+                            // If user logged in successfully, toggle favorite
+                            if (loggedIn == true && context.mounted) {
+                              favProvider.toggleFavorite(product);
+                            }
+                          } else {
+                            favProvider.toggleFavorite(product);
+                          }
+                        },
                       );
                     },
                   ),

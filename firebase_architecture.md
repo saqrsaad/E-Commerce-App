@@ -17,7 +17,8 @@ The migration also aimed to:
 * Provide a secure and extensible backend architecture for future development.
 
 ---
-# 📸 Screenshots
+
+### 📸 Screenshots
 
 ```html
 <p align="center">
@@ -28,14 +29,15 @@ The migration also aimed to:
   <img src="screenshots/13.jpg" width="200"/>
   <img src="screenshots/14.jpg" width="200"/>
   <img src="screenshots/15.jpg" width="200"/>
-  <img src="screenshots/16.jpg " width="200"/>
-   <img src="screenshots/17.jpg " width="200"/>
-    <img src="screenshots/18.jpg " width="200"/>
-     <img src="screenshots/19.jpg " width="200"/>
-
+  <img src="screenshots/16.jpg" width="200"/>
+  <img src="screenshots/17.jpg" width="200"/>
+  <img src="screenshots/18.jpg" width="200"/>
+  <img src="screenshots/19.jpg" width="200"/>
 </p>
 ```
+
 ---
+
 # 📐 Software Architecture
 
 The application follows a simplified **MVVM (Model–View–ViewModel)** architecture using `Provider` and `ChangeNotifier` for state management.
