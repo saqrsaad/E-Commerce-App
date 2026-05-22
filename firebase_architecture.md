@@ -20,7 +20,8 @@ The migration also aimed to:
 
 ### 📸 Screenshots
 
-```html
+### 📸 Screenshots
+
 <p align="center">
   <img src="screenshots/9.jpg" width="200"/>
   <img src="screenshots/10.jpg" width="200"/>
@@ -34,7 +35,6 @@ The migration also aimed to:
   <img src="screenshots/18.jpg" width="200"/>
   <img src="screenshots/19.jpg" width="200"/>
 </p>
-```
 
 ---
 
