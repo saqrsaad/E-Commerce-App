@@ -1,3 +1,4 @@
+import 'package:e_commerce_app/widgets/app_header.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/cart_provider.dart';
@@ -9,12 +10,19 @@ class CartScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('السلة')),
-      body: Consumer<CartProvider>(
-        builder: (context, cart, _) {
-          if (cart.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      //appBar: AppBar(title: const Text('السلة')),
+      body: Column(
+        children: [
+          AppHeader(
+            searchController: TextEditingController(), // غير مستخدم لكن ضروري
+            onSearchChanged: (_) {},
+          ),
+          Expanded(
+            child: Consumer<CartProvider>(
+              builder: (context, cart, _) {
+                if (cart.isLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                }
           if (cart.cartItems.isEmpty) {
             return const Center(
               child: Column(
@@ -36,7 +44,7 @@ class CartScreen extends StatelessWidget {
                       CartItemTile(cartItem: cart.cartItems[index]),
                 ),
               ),
-              // ملخص السلة
+
               Selector<CartProvider, double>(
                 selector: (_, provider) => provider.total,
                 builder: (context, total, child) {
@@ -77,6 +85,12 @@ class CartScreen extends StatelessWidget {
             ],
           );
         },
+      ),
+    
+    
+      ),
+      
+        ],
       ),
     );
   }

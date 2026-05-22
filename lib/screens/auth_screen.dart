@@ -17,7 +17,7 @@ class _AuthScreenState extends State<AuthScreen> {
   final _confirmPasswordController = TextEditingController();
   final _nameController = TextEditingController();
 
-  bool _isLogin = true; // true: تسجيل الدخول, false: إنشاء حساب
+  bool _isLogin = true; //
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
   bool _isLoading = false;
@@ -88,11 +88,15 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     }
 
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-        _errorMessage = error;
-      });
+    if (!mounted) return;
+    setState(() {
+      _isLoading = false;
+      _errorMessage = error;
+    });
+    if (error == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('تم تسجيل الدخول بنجاح')));
     }
   }
 
@@ -145,7 +149,8 @@ class _AuthScreenState extends State<AuthScreen> {
                               ),
                             ),
                             validator: (v) {
-                              if (!_isLogin && (v == null || v.trim().isEmpty)) {
+                              if (!_isLogin &&
+                                  (v == null || v.trim().isEmpty)) {
                                 return 'الاسم مطلوب';
                               }
                               return null;
@@ -166,7 +171,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           validator: _validateEmail,
                         ),
                         const SizedBox(height: 16),
-                        // حقل كلمة المرور
+
                         TextFormField(
                           controller: _passwordController,
                           obscureText: _obscurePassword,
@@ -174,9 +179,11 @@ class _AuthScreenState extends State<AuthScreen> {
                             labelText: 'كلمة المرور',
                             prefixIcon: const Icon(Icons.lock),
                             suffixIcon: IconButton(
-                              icon: Icon(_obscurePassword
-                                  ? Icons.visibility_off
-                                  : Icons.visibility),
+                              icon: Icon(
+                                _obscurePassword
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                              ),
                               onPressed: () {
                                 setState(() {
                                   _obscurePassword = !_obscurePassword;
@@ -190,7 +197,7 @@ class _AuthScreenState extends State<AuthScreen> {
                           validator: _validatePassword,
                         ),
                         const SizedBox(height: 16),
-                        // حقل تأكيد كلمة المرور (فقط عند إنشاء حساب)
+
                         if (!_isLogin)
                           TextFormField(
                             controller: _confirmPasswordController,
@@ -199,9 +206,11 @@ class _AuthScreenState extends State<AuthScreen> {
                               labelText: 'تأكيد كلمة المرور',
                               prefixIcon: const Icon(Icons.lock),
                               suffixIcon: IconButton(
-                                icon: Icon(_obscureConfirm
-                                    ? Icons.visibility_off
-                                    : Icons.visibility),
+                                icon: Icon(
+                                  _obscureConfirm
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                ),
                                 onPressed: () {
                                   setState(() {
                                     _obscureConfirm = !_obscureConfirm;
@@ -251,7 +260,9 @@ class _AuthScreenState extends State<AuthScreen> {
                                       color: Colors.white,
                                     ),
                                   )
-                                : Text(_isLogin ? 'تسجيل الدخول' : 'إنشاء حساب'),
+                                : Text(
+                                    _isLogin ? 'تسجيل الدخول' : 'إنشاء حساب',
+                                  ),
                           ),
                         ),
                         const SizedBox(height: 16),

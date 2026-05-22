@@ -1,8 +1,9 @@
 import 'package:e_commerce_app/firebase_options.dart';
 import 'package:e_commerce_app/providers/auth_provider.dart';
 import 'package:e_commerce_app/screens/auth_screen.dart';
+import 'package:e_commerce_app/screens/more_screen.dart';
+import 'package:e_commerce_app/services/seed_service.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/product_provider.dart';
@@ -19,6 +20,12 @@ Future<void> main() async {
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
+  try {
+    await SeedService().runAllSeeds();
+    print('✅ Seed completed successfully.');
+  } catch (e) {
+    print('❌ Seed failed: $e');
+  }
   runApp(const MyApp());
 }
 
@@ -30,9 +37,12 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
        ChangeNotifierProvider(create: (_) => AuthProvider()),
-
+ChangeNotifierProxyProvider<AuthProvider, FavoritesProvider>(
+          create: (ctx) => FavoritesProvider(ctx.read<AuthProvider>()),
+          update: (ctx, authProvider, previous) =>
+              previous ?? FavoritesProvider(authProvider),
+        ),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
-        ChangeNotifierProvider(create: (_) => FavoritesProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
       ],
       child: MaterialApp(
@@ -63,10 +73,10 @@ class AuthGate extends StatelessWidget {
 
         final user = snapshot.data;
         if (user != null) {
-          // المستخدم مسجل الدخول -> الشاشة الرئيسية
+
           return const MainScreen();
         } else {
-          // غير مسجل -> شاشة المصادقة
+
           return const AuthScreen();
         }
       },
@@ -88,6 +98,7 @@ class _MainScreenState extends State<MainScreen> {
     HomeScreen(),
     FavoritesScreen(),
     CartScreen(),
+    MoreScreen(),
   ];
 
   @override
@@ -101,6 +112,7 @@ class _MainScreenState extends State<MainScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'الرئيسية'),
           BottomNavigationBarItem(icon: Icon(Icons.favorite), label: 'المفضلة'),
           BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'السلة'),
+            BottomNavigationBarItem(icon: Icon(Icons.more_horiz), label: 'المزيد'),
         ],
       ),
     );

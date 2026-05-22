@@ -6,12 +6,12 @@ import '../models/product.dart';
 class SeedService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // ========== 1. بذور المنتجات ==========
+  
   Future<void> seedProducts() async {
-    // التحقق إذا كانت المنتجات موجودة مسبقًا (لتفادي التكرار)
+    // Check if products already exist (to avoid duplication)
     final snapshot = await _firestore.collection('products').limit(1).get();
     if (snapshot.docs.isNotEmpty) {
-      print('المنتجات موجودة مسبقًا، تم تخطي البذور.');
+      print('Products already exist, skipping seeding.');
       return;
     }
 
@@ -19,69 +19,79 @@ class SeedService {
       final response = await http.get(
         Uri.parse('https://fakestoreapi.com/products'),
         headers: {'Accept': 'application/json'},
-      );
+      ).timeout(Duration(seconds: 10));
 
       if (response.statusCode != 200) {
-        throw Exception('فشل جلب المنتجات من FakeStore API');
+        throw Exception('Failed to fetch products from FakeStore API');
       }
 
       final List<dynamic> productsJson = jsonDecode(response.body);
+      int addedCount = 0;
 
-      // تحويل كل منتج JSON إلى كائن Product ثم إلى خريطة Firestore
       for (final jsonObj in productsJson) {
-        final product = Product.fromJson(jsonObj);
+        try {
+          final product = Product.fromJson(jsonObj);
 
-        // إنشاء كلمات البحث من العنوان (تقسيمه إلى كلمات صغيرة)
-        final searchKeywords = product.title
-            .toLowerCase()
-            .split(RegExp(r'\s+'))
-            .where((word) => word.length > 2)
-            .toList();
+          // Generate search keywords from the title (split into lowercase words)
+          final searchKeywords = product.title
+              .toLowerCase()
+              .split(RegExp(r'\s+'))
+              .where((word) => word.length > 2)
+              .toList();
 
-        // إنشاء وثيقة جديدة في Firestore مع id تلقائي (أو استخدم product.id)
-        await _firestore.collection('products').add({
-          'title': product.title,
-          'price': product.price,
-          'description': product.description,
-          'category': product.category,
-          'imageUrl': product.imageUrl,
-          'rating': product.rating,
-          'ratingCount': product.ratingCount,
-          'stock': 10, // قيمة افتراضية
-          'isFeatured': false,
-          'searchKeywords': searchKeywords,
-          'createdAt': FieldValue.serverTimestamp(),
-        });
+          // Create a new Firestore document with an auto-generated id
+          // (or use product.id if preferred)
+          await _firestore.collection('products').add({
+            'title': product.title,
+            'price': product.price,
+            'description': product.description,
+            'category': product.category,
+            'imageUrl': product.imageUrl,
+            'rating': product.rating,
+            'ratingCount': product.ratingCount,
+            'stock': 10, // Default value
+            'isFeatured': false,
+            'searchKeywords': searchKeywords,
+            'createdAt': FieldValue.serverTimestamp(),
+          });
+
+          addedCount++;
+        } catch (e) {
+          print('⚠️ Failed to add product "${jsonObj['title']}": $e');
+        }
       }
 
-      print('تمت إضافة ${productsJson.length} منتجًا إلى Firestore.');
+      print(
+        '✅ Successfully added $addedCount products out of ${productsJson.length}',
+      );
     } catch (e) {
-      print('خطأ أثناء بذر المنتجات: $e');
-      // لا نوقف التطبيق على هذا الخطأ
+      print('Error while seeding products: $e');
     }
   }
 
-  // ========== 2. بذور محتوى الموقع ==========
   Future<void> seedSiteContent() async {
-    // التحقق من الوجود
     final snapshot = await _firestore.collection('siteContent').limit(1).get();
+
     if (snapshot.docs.isNotEmpty) {
-      print('محتوى الموقع موجود مسبقًا.');
+      print('Site content already exists.');
       return;
     }
 
     final Map<String, Map<String, String>> content = {
       'about': {
         'title': 'من نحن',
-        'body': 'متجرنا تأسس عام 2026، نقدم منتجات عالية الجودة بأفضل الأسعار.'
+        'body':
+            'متجرنا تأسس عام 2026، نقدم منتجات عالية الجودة بأفضل الأسعار.'
       },
       'privacy': {
         'title': 'سياسة الخصوصية',
-        'body': 'نحن نحمي بياناتك. نجمع فقط البريد الإلكتروني والاسم. لا نشاركها مع طرف ثالث.'
+        'body':
+            'نحن نحمي بياناتك. نجمع فقط البريد الإلكتروني والاسم. لا نشاركها مع طرف ثالث.'
       },
       'terms': {
         'title': 'الشروط والأحكام',
-        'body': 'باستخدامك للموقع توافق على الشروط. الأسعار قابلة للتغيير.'
+        'body':
+            'باستخدامك للموقع توافق على الشروط. الأسعار قابلة للتغيير.'
       },
       'contact': {
         'title': 'اتصل بنا',
@@ -94,13 +104,16 @@ class SeedService {
     };
 
     for (final entry in content.entries) {
-      await _firestore.collection('siteContent').doc(entry.key).set(entry.value);
+      await _firestore
+          .collection('siteContent')
+          .doc(entry.key)
+          .set(entry.value);
     }
 
-    print('تمت إضافة محتوى الموقع الافتراضي.');
+    print('Default site content has been added.');
   }
 
-  // ========== تشغيل جميع البذور ==========
+  // ========== Run All Seeds ==========
   Future<void> runAllSeeds() async {
     await seedProducts();
     await seedSiteContent();

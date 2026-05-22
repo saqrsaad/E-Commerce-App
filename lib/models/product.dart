@@ -62,25 +62,32 @@ class Product {
       'createdAt': createdAt ?? FieldValue.serverTimestamp(),
     };
   }
-
-
-  // ========== JSON القديم (للتوافق) ==========
+  
   factory Product.fromJson(Map<String, dynamic> json) {
-    return Product(
-      id: json['id'].toString(),
-      title: json['title'] ?? '',
-      price: (json['price'] as num).toDouble(),
-      description: json['description'] ?? '',
-      category: json['category'] ?? '',
-      imageUrl: json['image'] ?? json['imageUrl'] ?? '',
-      rating: (json['rating'] is Map)
-          ? (json['rating']['rate'] as num?)?.toDouble() ?? 0.0
-          : (json['rating'] as num?)?.toDouble() ?? 0.0,
-      ratingCount: (json['rating'] is Map)
-          ? json['rating']['count'] ?? 0
-          : json['ratingCount'] ?? 0,
-    );
+  double rating = 0.0;
+  int ratingCount = 0;
+
+  if (json['rating'] != null) {
+    if (json['rating'] is Map) {
+      rating = (json['rating']['rate'] as num?)?.toDouble() ?? 0.0;
+      ratingCount = json['rating']['count'] ?? 0;
+    } else if (json['rating'] is num) {
+      rating = (json['rating'] as num).toDouble();
+      ratingCount = json['ratingCount'] ?? 0;
+    }
   }
+
+  return Product(
+    id: json['id'].toString(),
+    title: json['title'] ?? '',
+    price: (json['price'] as num).toDouble(),
+    description: json['description'] ?? '',
+    category: json['category'] ?? '',
+    imageUrl: json['image'] ?? json['imageUrl'] ?? '',
+    rating: rating,
+    ratingCount: ratingCount,
+  );
+}
 
   Map<String, dynamic> toJson() => {
         'id': id,

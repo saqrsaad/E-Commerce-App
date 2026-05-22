@@ -1,43 +1,94 @@
+import 'dart:async';
+import 'package:e_commerce_app/services/favorites_service.dart';
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
 import '../models/product.dart';
+import 'auth_provider.dart';  
 
 class FavoritesProvider extends ChangeNotifier {
-  final Set<Product> _favorites = {};
+  final FavoritesService _favoritesService = FavoritesService();
+  final AuthProvider _authProvider;
 
-  List<Product> get favorites => _favorites.toList();
+  List<Product> _favorites = [];
+  bool _isLoading = false;
+  String? _errorMessage;
 
-  bool isFavorite(Product product) => _favorites.contains(product);
+  List<Product> get favorites => _favorites;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+  bool get isUserLoggedIn => _authProvider.user != null;
 
-  FavoritesProvider() {
-    _loadFavoritesFromPrefs();
+  FavoritesProvider(this._authProvider) {
+
+    _authProvider.addListener(_onAuthChanged);
+
+    if (_authProvider.user != null) {
+      _listenToFavorites();
+    }
   }
 
-  Future<void> _loadFavoritesFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString = prefs.getString('favorites');
-    if (jsonString != null) {
-      final List<dynamic> list = jsonDecode(jsonString);
-      _favorites.addAll(list.map((e) => Product.fromJson(e)));
+  void _onAuthChanged() {
+    if (_authProvider.user != null) {
+      _listenToFavorites();
+    } else {
+      // عند تسجيل الخروج، امسح القائمة المحلية
+      _favorites = [];
       notifyListeners();
     }
   }
 
-  Future<void> _saveFavoritesToPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final jsonString =
-        jsonEncode(_favorites.map((p) => p.toJson()).toList());
-    await prefs.setString('favorites', jsonString);
+  StreamSubscription<List<Product>>? _favSub;
+
+  void _listenToFavorites() {
+    final userId = _authProvider.user!.uid;
+    _favSub?.cancel();
+    _isLoading = true;
+    notifyListeners();
+    _favSub = _favoritesService.getFavoritesStream(userId).listen(
+      (products) {
+        _favorites = products;
+        _isLoading = false;
+        _errorMessage = null;
+        notifyListeners();
+      },
+      onError: (error) {
+        _isLoading = false;
+        _errorMessage = _translateError(error);
+        notifyListeners();
+      },
+    );
   }
 
-  void toggleFavorite(Product product) {
-    if (_favorites.contains(product)) {
-      _favorites.remove(product);
-    } else {
-      _favorites.add(product);
+  bool isFavorite(Product product) {
+    return _favorites.any((p) => p.id == product.id);
+  }
+
+  Future<void> toggleFavorite(Product product) async {
+    if (_authProvider.user == null) {
+      return;
     }
-    _saveFavoritesToPrefs();
-    notifyListeners();
+
+    final userId = _authProvider.user!.uid;
+    try {
+      if (isFavorite(product)) {
+        await _favoritesService.removeFromFavorites(userId, product.id);
+      } else {
+        await _favoritesService.addToFavorites(userId, product);
+      }
+    } catch (e) {
+      _errorMessage = _translateError(e);
+      notifyListeners();
+    }
+  }
+
+  String _translateError(dynamic e) {
+    if (e.toString().contains('permission-denied')) return 'ليس لديك صلاحية';
+    return 'حدث خطأ في المفضلة';
+  }
+
+  @override
+  void dispose() {
+    _authProvider.removeListener(_onAuthChanged);
+    _favSub?.cancel();
+    super.dispose();
   }
 }

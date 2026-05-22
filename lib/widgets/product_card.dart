@@ -1,3 +1,5 @@
+import 'package:e_commerce_app/screens/auth_screen.dart';
+import 'package:e_commerce_app/widgets/login_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/product.dart';
@@ -17,7 +19,9 @@ class ProductCard extends StatelessWidget {
       child: InkWell(
         onTap: () => Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => ProductDetailScreen(product: product)),
+          MaterialPageRoute(
+            builder: (_) => ProductDetailScreen(product: product),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(8),
@@ -25,35 +29,57 @@ class ProductCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Expanded(
+                flex: 3,
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: AspectRatio(
-                    aspectRatio: 1,
-                    child: Image.network(product.imageUrl, fit: BoxFit.cover),
+                  child: Container(
+                     color: Colors.grey.shade100,
+                    // aspectRatio: 1,
+                    child: Image.network(product.imageUrl, fit: BoxFit.contain),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
-              Text(product.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(fontWeight: FontWeight.w600)),
-              Text('\$${product.price.toStringAsFixed(2)}',
-                  style: const TextStyle(color: Colors.deepPurple)),
+              Text(
+                product.title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(
+                '\$${product.price.toStringAsFixed(2)}',
+                style: const TextStyle(color: Colors.deepPurple),
+              ),
               const Spacer(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Consumer<FavoritesProvider>(
-                    builder: (context, fav, _) => IconButton(
-                      icon: Icon(
-                        fav.isFavorite(product)
-                            ? Icons.favorite
-                            : Icons.favorite_border,
-                        color: fav.isFavorite(product) ? Colors.red : null,
-                      ),
-                      onPressed: () => fav.toggleFavorite(product),
-                    ),
+                    builder: (context, favProvider, _) {
+                      final isFav = favProvider.isFavorite(product);
+                      return IconButton(
+                        icon: Icon(
+                          isFav ? Icons.favorite : Icons.favorite_border,
+                          color: isFav ? Colors.red : null,
+                        ),
+                         onPressed: () async {
+        // Check if user is logged in
+        if (!favProvider.isUserLoggedIn) {
+          // Show login dialog
+          final loggedIn = await showDialog<bool>(
+            context: context,
+            builder: (_) => const LoginDialog(),
+          );
+          // If user logged in successfully, toggle favorite
+          if (loggedIn == true && context.mounted) {
+            favProvider.toggleFavorite(product);
+          }
+        } else {
+          favProvider.toggleFavorite(product);
+        }
+      },
+                      );
+                    },
                   ),
                   ElevatedButton.icon(
                     onPressed: () =>
@@ -70,6 +96,32 @@ class ProductCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  void _showLoginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('تنبيه'),
+        content: Text('يجب تسجيل الدخول لإضافة المنتج إلى المفضلة.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('لاحقًا'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              // الانتقال إلى شاشة المصادقة
+              Navigator.of(
+                context,
+              ).push(MaterialPageRoute(builder: (_) => AuthScreen()));
+            },
+            child: Text('تسجيل الدخول'),
+          ),
+        ],
       ),
     );
   }

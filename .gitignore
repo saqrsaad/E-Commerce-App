@@ -52,6 +52,7 @@ app.*.map.json
 
 # Allow README only
 !README.md
+!firebase_architecture.md
 # Android Studio will place build artifacts here
 /android/app/debug
 /android/app/profile
