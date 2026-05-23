@@ -23,6 +23,8 @@ This documentation continues the project development series and explains in deta
   
 </p>
 
+
+
 ## 🧱 Architectural Compliance
 
 The same layered architecture was maintained:

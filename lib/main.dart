@@ -72,26 +72,7 @@ class AuthGate extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
    return const MainScreen();
-  //  return StreamBuilder(
-  //     stream: context.read<AuthProvider>().authStateStream,
-  //     builder: (context, snapshot) {
-  //       // أثناء انتظار التحميل (Firebase يتحقق من الجلسة)
-  //       if (snapshot.connectionState == ConnectionState.waiting) {
-  //         return const Scaffold(
-  //           body: Center(child: CircularProgressIndicator()),
-  //         );
-  //       }
 
-  //       final user = snapshot.data;
-  //       if (user != null) {
-
-  //         return const MainScreen();
-  //       } else {
-
-  //         return const AuthScreen();
-  //       }
-  //     },
-  //   );
    }
 }
 
