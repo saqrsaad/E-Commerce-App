@@ -1,10 +1,12 @@
 import 'package:e_commerce_app/firebase_options.dart';
 import 'package:e_commerce_app/providers/auth_provider.dart';
+import 'package:e_commerce_app/providers/theme_provider.dart';
 import 'package:e_commerce_app/screens/auth_screen.dart';
 import 'package:e_commerce_app/screens/more_screen.dart';
 import 'package:e_commerce_app/services/seed_service.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+
 import 'package:provider/provider.dart';
 import 'providers/product_provider.dart';
 import 'providers/favorites_provider.dart';
@@ -44,12 +46,20 @@ ChangeNotifierProxyProvider<AuthProvider, FavoritesProvider>(
         ),
         ChangeNotifierProvider(create: (_) => ProductProvider()),
         ChangeNotifierProvider(create: (_) => CartProvider()),
+         ChangeNotifierProvider(create: (_) => ThemeProvider()),
       ],
-      child: MaterialApp(
-        title: 'المتجر الذكي',
-        theme: AppTheme.lightTheme,
-        debugShowCheckedModeBanner: false,
-        home: const MainScreen(),
+      child:  Consumer<ThemeProvider>(
+         builder: (context, themeProvider, _) {
+          return MaterialApp(
+            title: 'المتجر الذكي',
+            theme: AppTheme.lightTheme,
+             darkTheme: AppTheme.darkTheme,
+           // theme: themeProvider.isDarkMode ? AppTheme.darkTheme : AppTheme.lightTheme,
+             themeMode: themeProvider.themeMode,
+            debugShowCheckedModeBanner: false,
+            home: const AuthGate(),
+          );
+        },
       ),
     );
   }
@@ -61,27 +71,28 @@ class AuthGate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return StreamBuilder(
-      stream: context.read<AuthProvider>().authStateStream,
-      builder: (context, snapshot) {
-        // أثناء انتظار التحميل (Firebase يتحقق من الجلسة)
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+   return const MainScreen();
+  //  return StreamBuilder(
+  //     stream: context.read<AuthProvider>().authStateStream,
+  //     builder: (context, snapshot) {
+  //       // أثناء انتظار التحميل (Firebase يتحقق من الجلسة)
+  //       if (snapshot.connectionState == ConnectionState.waiting) {
+  //         return const Scaffold(
+  //           body: Center(child: CircularProgressIndicator()),
+  //         );
+  //       }
 
-        final user = snapshot.data;
-        if (user != null) {
+  //       final user = snapshot.data;
+  //       if (user != null) {
 
-          return const MainScreen();
-        } else {
+  //         return const MainScreen();
+  //       } else {
 
-          return const AuthScreen();
-        }
-      },
-    );
-  }
+  //         return const AuthScreen();
+  //       }
+  //     },
+  //   );
+   }
 }
 
 class MainScreen extends StatefulWidget {

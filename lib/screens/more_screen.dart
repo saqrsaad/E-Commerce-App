@@ -1,3 +1,4 @@
+import 'package:e_commerce_app/providers/theme_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
@@ -14,6 +15,8 @@ class MoreScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final auth = context.read<AuthProvider>();
+        final themeProvider = context.watch<ThemeProvider>();
+
     return Scaffold(
       body: Column(
         children: [
@@ -25,6 +28,21 @@ class MoreScreen extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                 _buildListTile(
+                  context,
+                  'الوضع الليلي',
+                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                  () => themeProvider.toggleTheme(),
+                  trailing: Switch(
+                    value: themeProvider.isDarkMode,
+                    onChanged: (_) => themeProvider.toggleTheme(),
+                    activeColor: const Color(0xFF6A11CB),
+                  ),
+                ),
+                const Divider(),
+                _buildListTile(context, 'من نحن', Icons.info_outline, () {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen()));
+                }),
                 _buildListTile(context, 'من نحن', Icons.info_outline, () {
                   Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutScreen()));
                 }),
@@ -56,11 +74,11 @@ class MoreScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildListTile(BuildContext context, String title, IconData icon, VoidCallback onTap) {
+  Widget _buildListTile(BuildContext context, String title, IconData icon, VoidCallback onTap,  {Widget? trailing}) {
     return ListTile(
       leading: Icon(icon, color: const Color(0xFF6A11CB)),
       title: Text(title),
-      trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+      trailing: trailing ?? const Icon(Icons.arrow_forward_ios, size: 16),
       onTap: onTap,
     );
   }
